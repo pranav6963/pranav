@@ -1,0 +1,69 @@
+#include <iostream>
+#include <vector>
+#include <thread> // For C++11 thread support
+using namespace std;
+
+#define SIZE 3
+
+// Global matrices with fixed values
+int matA[SIZE][SIZE] = {{1, 2, 3},
+                        {4, 5, 6},
+                        {7, 8, 9}};
+                        
+int matB[SIZE][SIZE] = {{9, 8, 7},
+                        {6, 5, 4},
+                        {3, 2, 1}};
+                        
+int matC[SIZE][SIZE];
+
+// Function to multiply one element (directly calculate the result)
+void multiplyElement(int position) {
+    int row = position / SIZE;
+    int col = position % SIZE;
+    
+    matC[row][col] = 0;
+    for(int i = 0; i < SIZE; i++) {
+        matC[row][col] += matA[row][i] * matB[i][col];
+    }
+}
+
+int main() {
+    vector<thread> threads;
+
+    // Create threads to multiply matrix elements
+    for (int i = 0; i < SIZE * SIZE; i++) {
+        threads.push_back(thread(multiplyElement, i));
+    }
+
+    // Wait for all threads to finish
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // Print matrices
+    cout << "Matrix A:\n";
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            cout << matA[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    cout << "\nMatrix B:\n";
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            cout << matB[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    cout << "\nResult Matrix:\n";
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            cout << matC[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}

@@ -1,0 +1,124 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class BankersAlgorithm {
+private:
+    int processes, resources;
+    vector<vector<int>> allocation, max_need;
+    vector<int> available;
+
+public:
+    BankersAlgorithm(int p, int r) : processes(p), resources(r) {
+        allocation.resize(p, vector<int>(r));
+        max_need.resize(p, vector<int>(r));
+        available.resize(r);
+    }
+
+    void input_data() {
+        cout << "Allocation Matrix:\n";
+        for (int i = 0; i < processes; i++)
+            for (int j = 0; j < resources; j++)
+                cin >> allocation[i][j];
+
+        cout << "Max Need Matrix:\n";
+        for (int i = 0; i < processes; i++)
+            for (int j = 0; j < resources; j++)
+                cin >> max_need[i][j];
+
+        cout << "Available Resources:\n";
+        for (int j = 0; j < resources; j++)
+            cin >> available[j];
+    }
+
+    bool is_safe_state() {
+        vector<int> work = available;
+        vector<bool> finish(processes, false);
+
+        int safe_count = 0;
+        while (safe_count < processes) {
+            bool found = false;
+
+            for (int i = 0; i < processes; i++) {
+                if (!finish[i]) {
+                    bool can_allocate = true;
+                    
+                    // Check if process needs can be met
+                    for (int j = 0; j < resources; j++) {
+                        if (max_need[i][j] - allocation[i][j] > work[j]) {
+                            can_allocate = false;
+                            break;
+                        }
+                    }
+
+                    // Allocate resources if possible
+                    if (can_allocate) {
+                        for (int j = 0; j < resources; j++)
+                            work[j] += allocation[i][j];
+                        
+                        finish[i] = true;
+                        safe_count++;
+                        found = true;
+                    }
+                }
+            }
+
+            // No process can be allocated
+            if (!found) {
+                cout << "Unsafe State\n";
+                return false;
+            }
+        }
+
+        cout << "Safe State\n";
+        return true;
+    }
+};
+
+int main() {
+    int p, r;
+    cout << "Processes: ";
+    cin >> p;
+    cout << "Resources: ";
+    cin >> r;
+
+    BankersAlgorithm banker(p, r);
+    banker.input_data();
+    banker.is_safe_state();
+
+    return 0;
+}
+// /*
+
+// Key Differences from Previous Version:
+// - Simplified code structure
+// - Reduced complexity
+// - Core algorithm remains same
+// - Easier to understand
+// - Minimal error handling
+
+// Sample Input:
+// ```
+// Processes: 5
+// Resources: 3
+
+// Allocation Matrix:
+// 0 1 0
+// 2 0 0
+// 3 0 2
+// 2 1 1
+// 0 0 2
+
+// Max Need Matrix:
+// 7 5 3
+// 3 2 2
+// 9 0 2
+// 4 2 2
+// 5 3 3
+
+// Available Resources:
+// 3 3 2
+// ```
+// */
+
+// Would you like me to explain the simplification?

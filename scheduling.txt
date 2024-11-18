@@ -1,0 +1,179 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Process {
+    int pid, arrival, burst, priority;
+    int waiting = 0, turnaround = 0, completion = 0;
+};
+
+void FCFS(vector<Process> p) {
+    cout << "\nFCFS Scheduling:\n";
+    int time = 0;
+    for(auto& process : p) {
+        process.waiting = max(0, time - process.arrival);
+        time += process.burst;
+        process.completion = time;
+        process.turnaround = process.completion - process.arrival;
+    }
+    
+    for(auto& process : p) {
+        cout << "P" << process.pid 
+             << "\tCompletion: " << process.completion 
+             << "\tTurnaround: " << process.turnaround 
+             << "\tWaiting: " << process.waiting << endl;
+    }
+}
+
+void SJF_Non_Preemptive(vector<Process> p) {
+    cout << "\nSJF Non-Preemptive:\n";
+    sort(p.begin(), p.end(), 
+        [](const Process& a, const Process& b) { 
+            return a.burst < b.burst; 
+        });
+    
+    int time = 0;
+    for(auto& process : p) {
+        process.waiting = max(0, time - process.arrival);
+        time += process.burst;
+        process.completion = time;
+        process.turnaround = process.completion - process.arrival;
+    }
+    
+    for(auto& process : p) {
+        cout << "P" << process.pid 
+             << "\tCompletion: " << process.completion 
+             << "\tTurnaround: " << process.turnaround 
+             << "\tWaiting: " << process.waiting << endl;
+    }
+}
+
+void Priority_Non_Preemptive(vector<Process> p) {
+    cout << "\nPriority Non-Preemptive:\n";
+    sort(p.begin(), p.end(), 
+        [](const Process& a, const Process& b) { 
+            return a.priority < b.priority; 
+        });
+    
+    int time = 0;
+    for(auto& process : p) {
+        process.waiting = max(0, time - process.arrival);
+        time += process.burst;
+        process.completion = time;
+        process.turnaround = process.completion - process.arrival;
+    }
+    
+    for(auto& process : p) {
+        cout << "P" << process.pid 
+             << "\tCompletion: " << process.completion 
+             << "\tTurnaround: " << process.turnaround 
+             << "\tWaiting: " << process.waiting << endl;
+    }
+}
+
+void Round_Robin(vector<Process> p, int quantum) {
+    cout << "\nRound Robin (Quantum = " << quantum << "):\n";
+    vector<int> remaining_time(p.size());
+    for(int i = 0; i < p.size(); i++) 
+        remaining_time[i] = p[i].burst;
+    
+    int time = 0;
+    while(true) {
+        bool done = true;
+        for(int i = 0; i < p.size(); i++) {
+            if(remaining_time[i] > 0) {
+                done = false;
+                if(remaining_time[i] > quantum) {
+                    time += quantum;
+                    remaining_time[i] -= quantum;
+                }
+                else {
+                    time += remaining_time[i];
+                    p[i].waiting = time - p[i].burst;
+                    remaining_time[i] = 0;
+                    p[i].completion = time;
+                    p[i].turnaround = p[i].completion - p[i].arrival;
+                }
+            }
+        }
+        if(done) break;
+    }
+    
+    for(auto& process : p) {
+        cout << "P" << process.pid 
+             << "\tCompletion: " << process.completion 
+             << "\tTurnaround: " << process.turnaround 
+             << "\tWaiting: " << process.waiting << endl;
+    }
+}
+
+// Function to input process details
+void inputProcesses(vector<Process>& processes) {
+    int n;
+    cout << "Enter number of processes: ";
+    cin >> n;
+
+    processes.clear(); // Clear any previously existing processes
+    for (int i = 0; i < n; ++i) {
+        Process p;
+        p.pid = i + 1;
+        cout << "Enter arrival time, burst time, and priority for Process " << p.pid << ": ";
+        cin >> p.arrival >> p.burst >> p.priority;
+        processes.push_back(p);
+    }
+}
+
+// Display the menu to the user
+void displayMenu() {
+    cout << "\nMenu:\n";
+    cout << "1. FCFS Scheduling\n";
+    cout << "2. SJF Non-Preemptive Scheduling\n";
+    cout << "3. Priority Non-Preemptive Scheduling\n";
+    cout << "4. Round Robin Scheduling\n";
+    cout << "5. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+int main() {
+    vector<Process> processes;
+    int choice, quantum;
+
+    while(true) {
+        inputProcesses(processes); // Input process details each time
+        displayMenu(); // Display the menu
+        cin >> choice;
+
+        switch(choice) {
+            case 1:
+                FCFS(processes);
+                break;
+            case 2:
+                SJF_Non_Preemptive(processes);
+                break;
+            case 3:
+                Priority_Non_Preemptive(processes);
+                break;
+            case 4:
+                cout << "Enter time quantum for Round Robin: ";
+                cin >> quantum;
+                Round_Robin(processes, quantum);
+                break;
+            case 5:
+                cout << "Exiting the program...\n";
+                return 0;
+            default:
+                cout << "Invalid choice, please try again.\n";
+        }
+
+        // Ask if user wants to run again
+        char cont;
+        cout << "\nDo you want to perform another operation? (y/n): ";
+        cin >> cont;
+        if (cont == 'n' || cont == 'N') {
+            break;
+        }
+    }
+
+    return 0;
+}

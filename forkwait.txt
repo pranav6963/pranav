@@ -1,0 +1,252 @@
+#include <iostream>
+#include <unistd.h>
+#include <sys/wait.h>
+using namespace std;
+
+void bubbleSort(int arr[], int n) {
+    for(int i = 0; i < n-1; i++) {
+        for(int j = 0; j < n-i-1; j++) {
+            if(arr[j] > arr[j+1]) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+
+void printArray(int arr[], int n) {
+    for(int i = 0; i < n; i++) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+int main() {
+    int choice;
+    cout << "Choose demonstration:\n";
+    cout << "1. Zombie Process\n";
+    cout << "2. Orphan Process\n";
+    cout << "Enter choice (1 or 2): ";
+    cin >> choice;
+
+    int n;
+    cout << "Enter number of elements: ";
+    cin >> n;
+    
+    int arr[n];
+    cout << "Enter " << n << " elements:\n";
+    for(int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+    
+    cout << "Original array: ";
+    printArray(arr, n);
+
+    pid_t pid = fork();
+
+    if(pid < 0) {
+        cout << "Fork failed!" << endl;
+        return 1;
+    }
+
+    // Child process
+    if(pid == 0) {
+        cout << "\nChild process (PID: " << getpid() 
+             << ", Parent PID: " << getppid() << ") started\n";
+
+        if(choice == 1) {  // Zombie demonstration
+            cout << "Child sorting array...\n";
+            bubbleSort(arr, n);
+            cout << "Sorted by child: ";
+            printArray(arr, n);
+            cout << "Child finishing - will become zombie until parent waits\n";
+            exit(0);
+        }
+        else {  // Orphan demonstration
+            cout << "Child will sleep for 10 seconds...\n";
+            sleep(10);  // Sleep to become orphan
+            
+            cout << "\nChild is now orphan!\n";
+            cout << "New parent PID: " << getppid() << "\n";
+            
+            bubbleSort(arr, n);
+            cout << "Sorted by orphan child: ";
+            printArray(arr, n);
+            
+            exit(0);
+        }
+    }
+    // Parent process
+    else {
+        if(choice == 1) {  // Zombie demonstration
+            cout << "\nParent process (PID: " << getpid() << ") sorting array\n";
+            bubbleSort(arr, n);
+            cout << "Sorted by parent: ";
+            printArray(arr, n);
+            
+            cout << "\nParent sleeping for 5 seconds - child becomes zombie\n";
+            cout << "Check zombie process using: ps aux | grep 'Z'\n";
+            sleep(5);
+            
+            cout << "Parent waiting for child...\n";
+            wait(NULL);
+            cout << "Child process completed and zombie removed\n";
+        }
+        else {  // Orphan demonstration
+            cout << "\nParent process (PID: " << getpid() 
+                 << ") will exit - child becomes orphan\n";
+            cout << "Check orphan process using: ps -ef | grep " 
+                 << getpid() << "\n";
+            exit(0);
+        }
+    }
+
+    return 0;
+}
+// import java.util.Scanner;
+
+// public class forkwait {
+
+//     // Bubble Sort Function
+//     public static void bubbleSort(int[] arr) {
+//         int n = arr.length;
+//         for (int i = 0; i < n - 1; i++) {
+//             for (int j = 0; j < n - i - 1; j++) {
+//                 if (arr[j] > arr[j + 1]) {
+//                     // Swap elements
+//                     int temp = arr[j];
+//                     arr[j] = arr[j + 1];
+//                     arr[j + 1] = temp;
+//                 }
+//             }
+//         }
+//     }
+
+//     // Function to print the array
+//     public static void printArray(int[] arr) {
+//         for (int i = 0; i < arr.length; i++) {
+//             System.out.print(arr[i] + " ");
+//         }
+//         System.out.println();
+//     }
+
+//     public static void main(String[] args) throws InterruptedException {
+
+//         Scanner scanner = new Scanner(System.in);
+
+//         // Menu for demonstration
+//         System.out.println("Choose demonstration:");
+//         System.out.println("1. Zombie Process");
+//         System.out.println("2. Orphan Process");
+//         System.out.print("Enter choice (1 or 2): ");
+//         int choice = scanner.nextInt();
+
+//         System.out.print("Enter number of elements: ");
+//         int n = scanner.nextInt();
+
+//         int[] arr = new int[n];
+//         System.out.println("Enter " + n + " elements:");
+//         for (int i = 0; i < n; i++) {
+//             arr[i] = scanner.nextInt();
+//         }
+
+//         System.out.print("Original array: ");
+//         printArray(arr);
+
+//         // Simulating fork (spawn child process)
+//         ProcessBuilder processBuilder = new ProcessBuilder();
+//         Process childProcess = null;
+
+//         try {
+//             // Creating a child process via ProcessBuilder (simulation of fork in Java)
+//             childProcess = processBuilder.start();
+//         } catch (Exception e) {
+//             System.out.println("Failed to create child process: " + e.getMessage());
+//             return;
+//         }
+
+//         if (childProcess == null) {
+//             System.out.println("Child process creation failed!");
+//             return;
+//         }
+
+//         // Child Process Simulation
+//         if (choice == 1) {  // Zombie Process
+//             Thread childThread = new Thread(() -> {
+//                 System.out.println("\nChild process (PID: " + Thread.currentThread().getId() + ") started");
+
+//                 System.out.println("Child sorting array...");
+//                 bubbleSort(arr);
+//                 System.out.print("Sorted by child: ");
+//                 printArray(arr);
+//                 System.out.println("Child finishing - will become zombie until parent waits");
+
+//                 try {
+//                     Thread.sleep(2000); // Simulate child exiting and becoming zombie
+//                 } catch (InterruptedException e) {
+//                     Thread.currentThread().interrupt();
+//                 }
+//                 System.exit(0);  // Child process ends
+//             });
+
+//             childThread.start();
+
+//             // Parent Process
+//             System.out.println("\nParent process (PID: " + Thread.currentThread().getId() + ") sorting array");
+//             bubbleSort(arr);
+//             System.out.print("Sorted by parent: ");
+//             printArray(arr);
+
+//             System.out.println("\nParent sleeping for 5 seconds - child becomes zombie");
+//             Thread.sleep(5000);
+
+//             System.out.println("Parent waiting for child...");
+//             childThread.join();  // Parent waits for child to finish
+
+//             System.out.println("Child process completed and zombie removed");
+//         } else if (choice == 2) {  // Orphan Process
+//             Thread childThread = new Thread(() -> {
+//                 System.out.println("\nChild process (PID: " + Thread.currentThread().getId() + ") started");
+//                 System.out.println("Child will sleep for 10 seconds...");
+//                 try {
+//                     Thread.sleep(10000);  // Simulate orphan process sleep
+//                 } catch (InterruptedException e) {
+//                     Thread.currentThread().interrupt();
+//                 }
+
+//                 System.out.println("\nChild is now orphan!");
+//                 System.out.println("New parent PID: " + Thread.currentThread().getId());
+//                 bubbleSort(arr);
+//                 System.out.print("Sorted by orphan child: ");
+//                 printArray(arr);
+
+//                 System.exit(0);  // Child process ends
+//             });
+
+//             childThread.start();
+
+//             // Parent Process
+//             System.out.println("\nParent process (PID: " + Thread.currentThread().getId() + ") will exit - child becomes orphan");
+//             System.out.println("Check orphan process using: ps -ef | grep " + Thread.currentThread().getId());
+//             System.exit(0);  // Parent exits immediately, making child an orphan
+//         }
+
+//         scanner.close();
+//     }
+// }
+
+//  Zombie Process:
+// For input:
+// Enter choice (1 or 2): 1
+// Enter number of elements: 5
+// Enter 5 elements: 
+// 3 1 4 1 5
+
+// Orphan Process:
+// For input:
+// Enter choice (1 or 2): 2
+// Enter number of elements: 4
+// Enter 4 elements: 
+// 10 2 8 7
+

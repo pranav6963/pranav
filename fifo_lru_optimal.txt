@@ -1,0 +1,97 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Function for FIFO Page Replacement
+int fifo(vector<int> ref_str, int frames) {
+    vector<int> memory;
+    int page_faults = 0;
+    
+    for (int page : ref_str) {
+        // If page is not in memory, it's a page fault
+        if (find(memory.begin(), memory.end(), page) == memory.end()) {
+            page_faults++;
+            // If memory is full, remove the first (FIFO)
+            if (memory.size() == frames) 
+                memory.erase(memory.begin());
+            memory.push_back(page);
+        }
+    }
+    return page_faults;
+}
+
+// Function for LRU Page Replacement
+int lru(vector<int> ref_str, int frames) {
+    vector<int> memory;
+    int page_faults = 0;
+    
+    for (int page : ref_str) {
+        auto it = find(memory.begin(), memory.end(), page);
+        // If page is not in memory, it's a page fault
+        if (it == memory.end()) {
+            page_faults++;
+            // If memory is full, remove the least recently used page
+            if (memory.size() == frames)
+                memory.erase(memory.begin());
+        } else {
+            // If page is found, remove it to update its position
+            memory.erase(it);
+        }
+        memory.push_back(page);
+    }
+    return page_faults;
+}
+
+// Function for Optimal Page Replacement
+int optimal(vector<int> ref_str, int frames) {
+    vector<int> memory;
+    int page_faults = 0;
+
+    for (size_t i = 0; i < ref_str.size(); i++) {
+        int page = ref_str[i];
+        // If page is not in memory, it's a page fault
+        if (find(memory.begin(), memory.end(), page) == memory.end()) {
+            page_faults++;
+            if (memory.size() < frames) {
+                memory.push_back(page);
+            } else {
+                // Find the page to replace
+                int farthest = i + 1, index = -1;
+                for (int j = 0; j < memory.size(); j++) {
+                    auto pos = find(ref_str.begin() + i + 1, ref_str.end(), memory[j]);
+                    if (pos == ref_str.end()) {
+                        index = j;
+                        break;
+                    } else if (pos - ref_str.begin() > farthest) {
+                        farthest = pos - ref_str.begin();
+                        index = j;
+                    }
+                }
+                memory[index] = page;
+            }
+        }
+    }
+    return page_faults;
+}
+
+int main() {
+    int frames;
+    cout << "Enter number of frames: ";
+    cin >> frames;
+
+    int n;
+    cout << "Enter number of pages in the reference string: ";
+    cin >> n;
+    
+    vector<int> ref_str(n);
+    cout << "Enter the reference string: ";
+    for (int i = 0; i < n; i++) cin >> ref_str[i];
+
+    // Calculating page faults for each algorithm
+    cout << "FIFO Page Faults: " << fifo(ref_str, frames) << endl;
+    cout << "LRU Page Faults: " << lru(ref_str, frames) << endl;
+    cout << "Optimal Page Faults: " << optimal(ref_str, frames) << endl;
+
+    return 0;
+}

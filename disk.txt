@@ -1,0 +1,141 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cstdlib>
+using namespace std;
+
+// SSTF Algorithm
+void sstf(vector<int> requests, int head) {
+    vector<int> order;
+    int total_movement = 0;
+    int current = head;
+    order.push_back(head);
+    
+    while (!requests.empty()) {
+        int min_dist = 999999;
+        int min_index = 0;
+        
+        // Find closest track
+        for (int i = 0; i < requests.size(); i++) {
+            if (abs(requests[i] - current) < min_dist) {
+                min_dist = abs(requests[i] - current);
+                min_index = i;
+            }
+        }
+        
+        current = requests[min_index];
+        total_movement += min_dist;
+        order.push_back(current);
+        requests.erase(requests.begin() + min_index);
+    }
+    
+    cout << "\nSSTF Order: ";
+    for (int track : order) {
+        cout << track << " ";
+    }
+    cout << "\nTotal head movement: " << total_movement << endl;
+}
+
+// SCAN Algorithm
+void scan(vector<int> requests, int head, int disk_size = 199) {
+    vector<int> order;
+    int total_movement = 0;
+    int current = head;
+    
+    sort(requests.begin(), requests.end());
+    order.push_back(head);
+    
+    // Move right first
+    for (int track : requests) {
+        if (track >= head) {
+            total_movement += abs(track - current);
+            current = track;
+            order.push_back(track);
+        }
+    }
+    
+    // Go to end
+    if (current != disk_size) {
+        total_movement += abs(disk_size - current);
+        current = disk_size;
+        order.push_back(disk_size);
+    }
+    
+    // Move left
+    for (int i = requests.size() - 1; i >= 0; i--) {
+        if (requests[i] < head) {
+            total_movement += abs(requests[i] - current);
+            current = requests[i];
+            order.push_back(requests[i]);
+        }
+    }
+    
+    cout << "\nSCAN Order: ";
+    for (int track : order) {
+        cout << track << " ";
+    }
+    cout << "\nTotal head movement: " << total_movement << endl;
+}
+
+// C-LOOK Algorithm
+void clook(vector<int> requests, int head) {
+    vector<int> order;
+    int total_movement = 0;
+    int current = head;
+    
+    sort(requests.begin(), requests.end());
+    order.push_back(head);
+    
+    // Move right first
+    for (int track : requests) {
+        if (track >= head) {
+            total_movement += abs(track - current);
+            current = track;
+            order.push_back(track);
+        }
+    }
+    
+    // Jump to beginning
+    if (requests[0] < head) {
+        total_movement += abs(requests[0] - current);
+        current = requests[0];
+        order.push_back(requests[0]);
+        
+        // Complete remaining tracks
+        for (int track : requests) {
+            if (track < head) {
+                total_movement += abs(track - current);
+                current = track;
+                order.push_back(track);
+            }
+        }
+    }
+    
+    cout << "\nC-LOOK Order: ";
+    for (int track : order) {
+        cout << track << " ";
+    }
+    cout << "\nTotal head movement: " << total_movement << endl;
+}
+
+int main() {
+    int head, n;
+    cout << "Enter initial head position: ";
+    cin >> head;
+    
+    cout << "Enter number of requests: ";
+    cin >> n;
+    
+    vector<int> requests(n);
+    cout << "Enter requests: ";
+    for (int i = 0; i < n; i++) {
+        cin >> requests[i];
+    }
+    
+    // Run all algorithms
+    sstf(requests, head);
+    scan(requests, head);
+    clook(requests, head);
+    
+    return 0;
+}

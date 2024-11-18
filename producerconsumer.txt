@@ -1,0 +1,86 @@
+#include <iostream>
+#include <queue>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+using namespace std;
+
+const int BUFFER_SIZE = 10;
+queue<int> buffer;
+mutex mtx;
+condition_variable cv;
+
+void producer() {
+    for (int i = 0; i < 20; ++i) {
+        unique_lock<mutex> lock(mtx);
+        
+        // Wait if buffer is full
+        cv.wait(lock, []{ return buffer.size() < BUFFER_SIZE; });
+        
+        int item = rand() % 100;
+        buffer.push(item);
+        cout << "Produced: " << item << endl;
+        
+        // Notify consumer
+        lock.unlock();
+        cv.notify_one();
+    }
+}
+
+void consumer() {
+    for (int i = 0; i < 20; ++i) {
+        unique_lock<mutex> lock(mtx);
+        
+        // Wait if buffer is empty
+        cv.wait(lock, []{ return !buffer.empty(); });
+        
+        int item = buffer.front();
+        buffer.pop();
+        cout << "Consumed: " << item << endl;
+        
+        // Notify producer
+        lock.unlock();
+        cv.notify_one();
+    }
+}
+
+void startProducerConsumer() {
+    // Start the producer and consumer threads
+    thread producerThread(producer);
+    thread consumerThread(consumer);
+    
+    producerThread.join();
+    consumerThread.join();
+}
+
+int main() {
+    int choice;
+    
+    do {
+        // Display menu
+        cout << "\nMenu:" << endl;
+        cout << "1. Start Producer-Consumer Simulation" << endl;
+        cout << "2. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        switch(choice) {
+            case 1:
+                // Start producer-consumer simulation
+                cout << "Starting Producer-Consumer simulation..." << endl;
+                startProducerConsumer();
+                break;
+                
+            case 2:
+                // Exit the program
+                cout << "Exiting program." << endl;
+                break;
+                
+            default:
+                cout << "Invalid choice, please try again!" << endl;
+        }
+        
+    } while(choice != 2);
+    
+    return 0;
+}

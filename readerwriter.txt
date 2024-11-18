@@ -1,0 +1,72 @@
+#include<iostream>
+#include <mutex>
+#include <vector>
+#include <chrono>
+#include<thread>
+using namespace std;
+
+class ReaderWriter {
+private:
+    mutex wrt;    // Used for write access control
+    mutex mtx;    // Used for readcount access control
+    int readcount = 0;
+    int shared_data = 0;
+
+public:
+    void writer() {
+        while(true) {
+            wrt.lock();    // wait(wrt)
+            
+            // Writing section
+            shared_data++;
+            cout << "Writer wrote: " << shared_data << endl;
+            
+            wrt.unlock();  // signal(wrt)
+            
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+    }
+
+    void reader(int id) {
+        while(true) {
+            mtx.lock();    // wait(mutex)
+            readcount++;
+            if(readcount == 1) {
+                wrt.lock(); // wait(wrt) - first reader blocks writers
+            }
+            mtx.unlock();   // signal(mutex)
+
+            // Reading section
+            cout << "Reader " << id << " read: " << shared_data << endl;
+
+            mtx.lock();    // wait(mutex)
+            readcount--;
+            if(readcount == 0) {
+                wrt.unlock(); // signal(wrt) - last reader allows writers
+            }
+            mtx.unlock();   // signal(mutex)
+
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+    }
+};
+
+int main() {
+    ReaderWriter rw;
+    vector<thread> readers;
+    vector<thread> writers;
+
+    // Create 3 readers
+    for(int i = 0; i < 3; i++) {
+        readers.push_back(thread(&ReaderWriter::reader, &rw, i+1));
+    }
+
+    // Create 1 writer
+    writers.push_back(thread(&ReaderWriter::writer, &rw));
+
+    // Let the program run for a while
+    cout << "Press Enter to exit..." << endl;
+    cin.get();
+
+    return 0;
+}
